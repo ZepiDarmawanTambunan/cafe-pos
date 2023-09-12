@@ -1,2 +1,5 @@
 - npm init -y
 - npm i express mysql2 sequelize bcrypt cors dotenv express-session
+- npm i sequelize-cli --save
+- npx sequelize init
+- npx sequelize migration:create --name=create-table-users
