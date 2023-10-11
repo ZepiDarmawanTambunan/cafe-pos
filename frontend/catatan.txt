@@ -1,0 +1,5 @@
+- npm create vite@latest frontend -- --template react
+- install tailwind
+- npm i redux react-router-dom axios react-icons
+
+- .env di vite harus didahului VITE_

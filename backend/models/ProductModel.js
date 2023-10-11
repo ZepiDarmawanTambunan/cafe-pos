@@ -1,8 +1,6 @@
-const { Sequelize } =  require("sequelize");
+const { Sequelize, DataTypes } =  require("sequelize");
 const db = require('../config/Database');
 const Users = require("./UserModel");
-
-const {DataTypes} = Sequelize;
 
 const Products = db.define('products', {
     uuid: {
@@ -34,6 +32,10 @@ const Products = db.define('products', {
         validate: {
             notEmpty: true,
         }
+    },
+    image: {
+        type: DataTypes.STRING,
+        allowNull: true,
     },
 }, {
     freezeTableName: true
