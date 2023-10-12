@@ -87,7 +87,17 @@ const createUser = async (req, res) => {
         });
         res.status(201).json({msg: 'Register berhasil'});
     } catch (error) {
-        res.status(400).json({msg: error.message})
+        if (error.name === 'SequelizeValidationError') {
+            // Jika kesalahan adalah kesalahan validasi Sequelize
+            const validationErrors = error.errors.map((e) => ({
+              field: e.path,
+              message: e.message,
+            }));
+            res.status(400).json({ errors: validationErrors });
+          } else {
+            // Kesalahan lainnya
+            res.status(500).json({ message: 'Kesalahan server' });
+          }
     }
 
 };
@@ -125,7 +135,17 @@ const updateUser = async (req, res) => {
 
         res.status(200).json({msg: "User updated"});
     } catch (error) {
-        res.status(400).json({msg: error.message});
+        if (error.name === 'SequelizeValidationError') {
+            // Jika kesalahan adalah kesalahan validasi Sequelize
+            const validationErrors = error.errors.map((e) => ({
+              field: e.path,
+              message: e.message,
+            }));
+            res.status(400).json({ errors: validationErrors });
+          } else {
+            // Kesalahan lainnya
+            res.status(500).json({ message: 'Kesalahan server' });
+        }
     }
 };
 

@@ -1,8 +1,16 @@
 const User = require('../models/UserModel');
 const bcrypt = require('bcrypt');
+const validator = require('validator');
 
 const login = async (req, res) => {
     try {
+        const errors = [];
+        if (!validator.isEmail(req.body.email)) {
+            errors.push("Email tidak valid");
+        }
+        if (errors.length > 0) {
+            return res.status(400).json({ errors });
+        }
         const user = await User.findOne({
             where: {
                 email: req.body.email
@@ -52,4 +60,3 @@ module.exports = {
     me,
     logout
 };
-

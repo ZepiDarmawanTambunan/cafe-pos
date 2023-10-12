@@ -89,65 +89,75 @@ const createProduct = async(req, res) => {
         });
         res.status(201).json({msg: 'product created success'});
     } catch (error) {
-        res.status(500).json({msg: error.message});
+      if (error.name === 'SequelizeValidationError') {
+        // Jika kesalahan adalah kesalahan validasi Sequelize
+        const validationErrors = error.errors.map((e) => ({
+          field: e.path,
+          message: e.message,
+        }));
+        res.status(400).json({ errors: validationErrors });
+      } else {
+        // Kesalahan lainnya
+        res.status(500).json({ message: 'Kesalahan server' });
+      }
     }
 }
 
-const updateProduct = async (req, res) => {
-    try {
-      const product = await Product.findOne({
-        where: {
-          uuid: req.params.id,
-        },
-      });
-  
-      if (!product) return res.status(404).json({ msg: 'Data tidak ditemukan' });
-      const { name, price } = req.body;
-  
-      let oldImage = product.image;
-      let newImage = null;
-      if (req.file) {
-        const { filename } = req.file;
-        newImage = filename;
-      }
-      if (oldImage && newImage) {
-        const rootProjectPath = process.cwd(); // Mendapatkan path root project
-        const filePathToDelete = path.join(rootProjectPath, 'uploads', oldImage);
+  const updateProduct = async (req, res) => {
+      try {
+        const product = await Product.findOne({
+          where: {
+            uuid: req.params.id,
+          },
+        });
+    
+        if (!product) return res.status(404).json({ msg: 'Data tidak ditemukan' });
+        const { name, price } = req.body;
+    
+        let oldImage = product.image;
+        let newImage = null;
+        if (req.file) {
+          const { filename } = req.file;
+          newImage = filename;
+        }
+        if (oldImage && newImage) {
+          const rootProjectPath = process.cwd(); // Mendapatkan path root project
+          const filePathToDelete = path.join(rootProjectPath, 'uploads', oldImage);
 
-        if (fs.existsSync(filePathToDelete)) {
-          fs.unlink(filePathToDelete, (err) => {
-            if (err) {
-              console.error('Gagal menghapus file:', err);
-            } else {
-              console.log('File berhasil dihapus:', oldImage);
-            }
-          });
+          if (fs.existsSync(filePathToDelete)) {
+            fs.unlink(filePathToDelete, (err) => {
+              if (err) {
+                console.error('Gagal menghapus file:', err);
+              } else {
+                console.log('File berhasil dihapus:', oldImage);
+              }
+            });
+          } else {
+            console.error('File tidak ditemukan:', oldImage);
+          }
+        }
+
+        if (req.role === 'admin' || req.userId === product.userId) {
+          if(newImage){
+            await Product.update({ name, price, image: newImage }, {
+              where: {
+                id: product.id,
+              },
+            });
+          }else{
+            await Product.update({ name, price}, {
+              where: {
+                id: product.id,
+              },
+            });
+          }
+          res.status(200).json({ msg: 'Product updated successfully' });
         } else {
-          console.error('File tidak ditemukan:', oldImage);
+          res.status(403).json({ msg: 'Akses terlarang' });
         }
+      } catch (error) {
+        res.status(500).json({ msg: 'Terjadi kesalahan dalam menghapus produk' });
       }
-
-      if (req.role === 'admin' || req.userId === product.userId) {
-        if(newImage){
-          await Product.update({ name, price, image: newImage }, {
-            where: {
-              id: product.id,
-            },
-          });
-        }else{
-          await Product.update({ name, price}, {
-            where: {
-              id: product.id,
-            },
-          });
-        }
-        res.status(200).json({ msg: 'Product updated successfully' });
-      } else {
-        res.status(403).json({ msg: 'Akses terlarang' });
-      }
-    } catch (error) {
-      res.status(500).json({ msg: 'Terjadi kesalahan dalam menghapus produk' });
-    }
   };
 
   const deleteProduct = async (req, res) => {
