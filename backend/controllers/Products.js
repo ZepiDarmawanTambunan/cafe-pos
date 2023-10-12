@@ -104,17 +104,12 @@ const updateProduct = async (req, res) => {
       if (!product) return res.status(404).json({ msg: 'Data tidak ditemukan' });
       const { name, price } = req.body;
   
-      // Gambar lama produk
       let oldImage = product.image;
-  
-      // Gambar baru dari req.file
       let newImage = null;
-  
       if (req.file) {
         const { filename } = req.file;
         newImage = filename;
       }
-
       if (oldImage && newImage) {
         const rootProjectPath = process.cwd(); // Mendapatkan path root project
         const filePathToDelete = path.join(rootProjectPath, 'uploads', oldImage);
@@ -131,22 +126,26 @@ const updateProduct = async (req, res) => {
           console.error('File tidak ditemukan:', oldImage);
         }
       }
-  
-      console.log("newImage"+ newImage);
 
       if (req.role === 'admin' || req.userId === product.userId) {
-        await Product.update({ name, price, image: newImage }, {
-          where: {
-            id: product.id,
-          },
-        });
-  
+        if(newImage){
+          await Product.update({ name, price, image: newImage }, {
+            where: {
+              id: product.id,
+            },
+          });
+        }else{
+          await Product.update({ name, price}, {
+            where: {
+              id: product.id,
+            },
+          });
+        }
         res.status(200).json({ msg: 'Product updated successfully' });
       } else {
         res.status(403).json({ msg: 'Akses terlarang' });
       }
     } catch (error) {
-      console.error(error); // Tampilkan error di konsol
       res.status(500).json({ msg: 'Terjadi kesalahan dalam menghapus produk' });
     }
   };

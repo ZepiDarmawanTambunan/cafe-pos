@@ -6,8 +6,9 @@ const FormEditProduct = () => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [msg, setMsg] = useState("");
-  const [image, setImage] = useState(null);
+  const [oldImage, setOldImage] = useState(null);
   const [newImage, setNewImage] = useState(null);
+  const [previewNewImage, setPreviewNewImage] = useState(null);
   const navigate = useNavigate();
   const {id} = useParams();
 
@@ -17,7 +18,7 @@ const FormEditProduct = () => {
         const response = await api.get(`/products/${id}`);
         setName(response.data.name);
         setPrice(response.data.price);
-        setImage(response.data.image);
+        setOldImage(response.data.image);
       }catch(error){
         if(error.response){
           setMsg(error.response.data.msg);
@@ -30,37 +31,22 @@ const FormEditProduct = () => {
   const handleImageChange = (e) => {
       if (e.target.files.length > 0) {
           const selectedImage = e.target.files[0];
-          setNewImage(URL.createObjectURL(selectedImage));
+          setPreviewNewImage(URL.createObjectURL(selectedImage));
+          setNewImage(selectedImage);
       }else{
+          setPreviewNewImage(null);
           setNewImage(null);
       }
   };
 
   const updateProduct = async (e) => {
     e.preventDefault();
-
-    if (newImage) {
-      try {
-        const response = await fetch(newImage); // Fetch the image URL
-        const blob = await response.blob(); // Convert the fetched data to a Blob
-
-        // Berikan nama file secara manual
-        const manualFileName = "image.jpg"; // Ganti dengan nama file yang diinginkan
-
-        // Buat objek File dari Blob dengan nama file yang diberikan secara manual
-        const file = new File([blob], manualFileName);
-        setImage(file);
-      } catch (error) {
-        console.error("Error fetching or converting the image:", error);
-      }
-    }
-
     const formData = new FormData();
     formData.append('name', name);
     formData.append('price', price);
-    formData.append('image', image);
-
-    console.log(image);
+    if(newImage){
+      formData.append('image', newImage);
+    }
 
     try {
       await api.patch(`/products/${id}`, formData);
@@ -89,16 +75,16 @@ const FormEditProduct = () => {
                   <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="image">Image</label>
                   <input className="bg-gray-200 appearance-none border-2 border-gray-200 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:bg-white focus:border-green-500" id="image" type="file" placeholder="product image" onChange={handleImageChange}/>
               </div>
-              {newImage ? (
+              {previewNewImage ? (
                 <img
-                    src={newImage}
+                    src={previewNewImage}
                     alt="Preview"
                     className="my-2"
                     style={{ maxWidth: "200px", maxHeight: '100px' }}
                     />
-              ) : image && (
+              ) : oldImage && (
                 <img
-                  src={`http://localhost:5000/uploads/${image}`}
+                  src={`http://localhost:5000/uploads/${oldImage}`}
                   alt="Image"
                   className="my-2"
                   style={{ maxWidth: "200px", maxHeight: '100px' }}
